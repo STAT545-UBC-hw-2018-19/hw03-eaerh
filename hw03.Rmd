@@ -1,0 +1,114 @@
+---
+title: "Hw03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(gapminder))
+
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(gghighlight))
+suppressPackageStartupMessages(library(gridExtra))
+
+```
+
+**Task 1**
+
+
+This shows that Asia is the continent with the largest spread in GDP per capita.
+```{r}
+
+gap_df1 = gapminder %>%
+  group_by(continent) %>%
+  summarize(gdpMAX = max(gdpPercap), gdpMIN = min(gdpPercap))
+
+gap_df1
+
+```
+```{r}
+gap_df1%>%
+  ggplot(aes(continent, gdpMAX, fill = continent))+
+  geom_bar(stat = "identity")+
+  labs(title="Maximum GDP by continents")
+
+
+gap_df1%>%
+  ggplot(aes(continent, gdpMIN, fill = continent))+
+  geom_bar(stat = "identity")+
+  labs(title="Minimum GDP by continents")
+
+```
+
+**Task 2**
+
+
+```{r}
+sum_stat = 
+  gapminder %>%
+  group_by(continent) %>%
+  summarize(SD = sd(gdpPercap),
+            Mean = mean(gdpPercap),
+            Median = median(gdpPercap), 
+            Min = min(gdpPercap), 
+            Max = max(gdpPercap),
+            Qu_1st = quantile(gdpPercap,0.25), 
+            Qu_3rd = quantile(gdpPercap, 0.75))
+
+  
+sum_stat
+
+gapminder%>%
+  ggplot(aes(continent, gdpPercap, fill = continent))+
+  geom_boxplot()+
+  labs(title="Boxplot of GDP per cap per continent")
+
+gapminder%>%
+  ggplot(aes(gdpPercap, fill = continent))+
+  facet_wrap(~continent,scale = "free_y")+
+  geom_histogram(bins = 50)
+```
+
+
+**Task 3**
+
+Below is presented the interquartile mean, the $25\%$ trimmed mean, of life expectancy arranged by year.
+
+```{r}
+trimmed_df = gapminder %>%
+  group_by(year) %>%  
+  summarize(mean_lifeExp = mean(lifeExp), trimmed_mean_lifeExp = mean(lifeExp, trim = 0.25))%>%   arrange(year) 
+
+weighted_df = gapminder %>%
+  group_by(year) %>%   
+  summarise(mean_lifeExp = mean(lifeExp), weighted_mean_lifeExp = weighted.mean(lifeExp,pop))%>%
+  arrange(year)
+
+trimmed_df
+weighted_df
+
+```
+
+**Task 4**
+
+The task was solved by making a linear regression line on top of the points to show how life expectancy is changing through the years.
+
+```{r}
+lifeExp_df = gapminder %>%
+  group_by(continent, year) %>%
+  summarise(mean_lifeExp = mean(lifeExp))
+
+lifeExp_df %>%
+  ggplot(aes(year, mean_lifeExp, color = continent))+
+  geom_point()+geom_smooth(method = "lm")
+
+# plot the distribution of each continent.
+ggplot(gapminder, aes(year,lifeExp))+
+  facet_wrap(~continent)+geom_point(alpha = 0.2)+geom_smooth()
+```
+
